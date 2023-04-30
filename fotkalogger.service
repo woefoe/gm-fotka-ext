@@ -1,0 +1,9 @@
+[Unit]
+Description=Simple logger for fotka messages
+
+[Service]
+ExecStart=/usr/local/bin/fotkalogger.sh
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
