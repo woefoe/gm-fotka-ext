@@ -52,3 +52,8 @@ Make sure the service is running (check status with `systemctl status fotkalogge
 Now You can specify websocket address in Your configuration. Find `cfg.logChatUrl` and set it to `ws://127.0.0.1:8085`.
 
 Reload and viola!
+
+## Todo-maybes
+
+* Censoring avatars
+* Logging of live stream messages
