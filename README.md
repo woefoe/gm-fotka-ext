@@ -19,3 +19,18 @@ This greasemonkey scripts helps to deal with toxic environment on fotka, without
 * hide simp buttons – hide buttons meant for simps
 
 Tested to work on Qutebrowser and on Firefox with Tampermonkey plugin.
+
+## Making logging work
+
+This is only tested on linux. If You have a log capturing application for windows, do let me know, but anyway.
+
+```shell
+cp fotkalogger.sh /usr/local/bin/fotkalogger.sh
+cp fotkalogger.service ~/.config/systemd/user/fotkalogger.service
+systemctl --user enable --now fotkalogger.service
+```
+
+Make sure the service is running (check status with `systemctl status fotkalogger` and logs with `journalctl -u fotkalogger`)
+Now You can specify websocket address in Your configuration. Find `cfg.logChatUrl` and set it to `ws://127.0.0.1:8085`.
+
+Reload and viola!
