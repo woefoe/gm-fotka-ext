@@ -20,6 +20,24 @@ This greasemonkey scripts helps to deal with toxic environment on fotka, without
 
 Tested to work on Qutebrowser and on Firefox with Tampermonkey plugin.
 
+## Installing
+
+### Firefox
+
+1. Install Tampermonkey addon.
+2. Click Tampermonkey icon, select `Create a new script...`
+3. Paste contents of gm-fotka-ext.js into the window replacing all contents.
+4. Customize the options – adjust cfg, read comments, check mentionPatterns, userAliases, blockedUsers.
+5. Save the plugin.
+6. Reload Your chat tab.
+
+### Qutebrowser
+
+1. Copy script into `~/.config/qutebrowser/greasemonkey` folder
+2. Edit it with editor of your choice – adjust cfg, read comments, check mentionPatterns, userAliases, blockedUsers.
+3. Save the file.
+4. Type `:greasemonkey-reload` and then `:reload` to reload greasemonkey scripts and the tab.
+
 ## Making logging work
 
 This is only tested on linux. If You have a log capturing application for windows, do let me know, but anyway.
