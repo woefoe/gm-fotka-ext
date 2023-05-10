@@ -9,12 +9,14 @@ This greasemonkey scripts helps to deal with toxic environment on fotka, without
   * in chat userlist
   * in live stream chat
 * highlighting mentons extended – specify additional patterns that you want to make message marked as mentioning You
-* logging chat – log chat to a file using websockets and local service
+* logging – logging to local file using websockets and a service running in background
+  * chat – log chat messages
+  * users – log who's currently online
 * user aliases – alias annoying and offensive user names
 * customization:
   * font – set site-wide font to use, because the default can be bad for the eyes
   * background – set the background, this is useful when Your darkening plugin has trouble with gradient background
-  * chat star scale - set scale of oversized chat premium icon, that covers beautiful avatars
+  * chat star scale – set scale of oversized chat premium icon, that covers beautiful avatars
 * hide popup messages (experimental) – hide popup toasts about users viewing your profile. This is experimentable and mostly doesnt work.
 * hide simp buttons – hide buttons meant for simps
 
