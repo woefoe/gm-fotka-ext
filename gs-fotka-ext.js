@@ -15,6 +15,7 @@ let cfg = {
   fontFamily: "Sans",                       // better web font
   gwiazdaScale: 0.6,                        // scale of a star icon in chat
   blockInterval: 1000,                      // interval of filtering messages and users
+  logUsersInterval: 30000,                  // interval of user logging
   hidePopupMessages: true,                  // hide popups about swearing in chat
   hideSimpButtons: true,                    // hide buttons for simps like "Tak i Nie", "Ranking"
   hideUsersChatMessages: true,              // hide messages list in chat
@@ -23,6 +24,11 @@ let cfg = {
   filterUsersInLiveChat: true,              // hide users in live stream chat
   logChatUrl: ""                            // address to send logs over over websocket (in ws://... format), disabled if empty
 }
+
+let lognamePatterns = [
+  /^\/(czat)\/(\w+)$/,
+  /^\/(kamerka)\/(.*)$/
+]
 
 // highlight additional mentions (case sensitive/regexp)
 let mentionPatterns = [
@@ -56,12 +62,12 @@ function get_timestamp() {
   return dateStr + 'T' + timeStr
 }
 
-function add_message(login, message, date) {
+function add_message(logname, date, login, message) {
   if (messagesQueue.length > 2048) {
     console.warn("Dropping message due to buffer overflow");
     messagesQueue.pop();
   }
-  messagesQueue.push(date + "\t" + login + "\t" + message)
+  messagesQueue.push(logname + "\t" + date + "\t" + login + "\t" + message)
 
   var ws = new WebSocket(cfg.logChatUrl)
   ws.addEventListener("open", () => {
@@ -84,6 +90,18 @@ function mark_message_as_mention(target) {
   target.children(".cloud-arrow-border").addClass(mentionClass)
   target.find(".cloud-arrow-border-arrow").addClass(mentionClass)
   target.find(".cloud-container-body").addClass(mentionClass)
+}
+
+function log_chat_users() {
+  var $users = $("#users-list .chatLogin")
+  var users = ""
+  for (var i = 0; i < $users.length; ++i) {
+    if (i !== 0) {
+      users += " "
+    }
+    users += $users[i].textContent;
+  }
+  add_message(get_logname() + ".users", get_timestamp(), "_", users)
 }
 
 // handlers
@@ -115,13 +133,26 @@ function dom_popup_handler(event) {
   }
 }
 
+function get_logname() {
+  let logname = "czat.Glowny"
+  for (var i = 0; i < lognamePatterns.length; ++i) {
+    let lognamePattern = lognamePatterns[i]
+    let matched = location.pathname.match(lognamePattern)
+    if (matched !== null) {
+      logname = matched[1] + '.' + matched[2]
+    }
+  }
+  return logname
+}
+
 function dom_chat_handler(event) {
   let $target = $(event.target)
   let login = $target.attr("login")
   let message = messageRegexp.exec(event.target.textContent.trim())[2]
+  var logname = get_logname()
 
-  //log messages
-  add_message(login, message, get_timestamp())
+  // log messages
+  add_message(logname, get_timestamp(), login, message)
 
   // handle mentions
   for (var i = 0; i < mentionPatterns.length; ++i) {
@@ -161,14 +192,17 @@ function on_doc_ready(){
     //          //FotkaChat.ColorPicker.colorSelect(this)
     //      )
 
-    filter_blocked()
-    var id;
+    var intervalTarget
     if (unsafeWindow === null) {
-      id = window.setInterval(function () { filter_blocked(); }, cfg.blockInterval)
+      intervalTarget = window;
     } else {
-      id = unsafeWindow.setInterval(function () { filter_blocked(); }, cfg.blockInterval)
+      intervalTarget = unsafeWindow;
     }
-    GM_setValue("filterBlockedInterval", id);
+
+    var filterBlockedIntervalId = intervalTarget.setInterval(function () { filter_blocked(); }, cfg.blockInterval)
+    GM_setValue("filterBlockedInterval", filterBlockedIntervalId);
+    var logUsersIntervalId =  intervalTarget.setInterval(function () { log_users(); }, cfg.logUsersInterval)
+    GM_setValue("logUsersInterval", logUsersIntervalId);
 
     // TODO working hiding notiffications
     //$("body").bind("DOMNodeInserted", function() {
@@ -244,6 +278,30 @@ function filter_blocked() {
     if (cfg.filterUsersInChatUsersInterval) {
       remove_user_from_chat_users(userPattern)
     }
+  }
+}
+
+function log_users() {
+  if (typeof jQuery === 'undefined') {
+    // If JQuery is not available, there's no frequently updated content
+    console.log("jQuery is not available, filtering inactive");
+
+    // stop loop if there is one
+    var id = GM_getValue("logUsersInterval", null)
+    if (id > 0) {
+      console.log("Stopping loop")
+      if (unsafeWindow === null) {
+        window.clearInterval(id);
+      } else {
+        unsafeWindow.clearInterval(id)
+      }
+      GM_setValue("logUsersInterval", 0)
+    }
+    return;
+  }
+
+  if (location.pathname.startsWith('/czat')) {
+    log_chat_users()
   }
 }
 
