@@ -11,7 +11,8 @@ This greasemonkey scripts helps to deal with toxic environment on fotka, without
 * highlighting mentons extended – specify additional patterns that you want to make message marked as mentioning You
 * logging – logging to local file using websockets and a service running in background
   * chat – log chat messages
-  * users – log who's currently online
+  * live chat – log live chat messages
+  * users – log who's currently online (in chat only)
 * user aliases – alias annoying and offensive user names
 * customization:
   * font – set site-wide font to use, because the default can be bad for the eyes
@@ -58,4 +59,4 @@ Reload and viola!
 ## Todo-maybes
 
 * Censoring avatars
-* Logging of live stream messages
+* Highlighting observed users so You don't miss their messages
