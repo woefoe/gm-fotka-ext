@@ -7,6 +7,7 @@
 from collections import namedtuple
 from collections.abc import Generator, Iterable
 from operator import itemgetter
+from math import ceil
 import datetime
 
 PresenceRecord = tuple[datetime.datetime, list[str]]
@@ -58,8 +59,15 @@ class Appearance:
 class Appearances:
     def __init__(self, presences: Iterable[PresenceRecord], min_appearances=100):
         # appearances of users and bystanders
-        self.encounters: map[str, map[str, int]] = {}
+        # user1:    {
+        #                user1: {
+        #                        date(2023, 05, 23): Appearance,
+        #                        date(2023, 05, 24): Appearance,
+        #                        }
+        #            }
+        self.encounters: map[str, map[str, Appearance]] = {}
         self.total = 0
+        self.dates: set[datetime.date] = set()
 
         for self.total, (timestamp, users) in enumerate(presences):
             for user in users:
@@ -73,6 +81,8 @@ class Appearances:
                     date = timestamp.date()
                     if date not in user_encounters[bystander].dates:
                         user_encounters[bystander].dates[date] = set()
+                        if date not in self.dates:
+                            self.dates.add(date)
                     user_encounters[bystander].dates[date].add(timestamp.time().replace(minute=0, second=0, microsecond=0))
 
         if min_appearances:
@@ -93,6 +103,12 @@ class Appearances:
            tomas(mod) 1160                      # username and overall logs with the user
              2023-05-06 2023-06-07 2023-07-15   # dates the user was seen in the chat
 
+             Mon  | Tue  | Wed  | Thu  | Fri  | Sat  | Sun
+              25%    25%    25%    25%     0%     0%     0%
+
+             1         12          24
+              ▃▃     █▆▃ ▃▆▃  ▃▃▃    
+
                Motylove(mod) 335/1160           # number of encounters (logs with both of the users)
                  2023-05-06 2023-07-15          # TODO dates of the encounters
                Miloslaw      25/1160
@@ -102,6 +118,7 @@ class Appearances:
             records = user_encounters[user].count
             dates = user_encounters[user].dates
             print(f"{user:<18}: {records}", file=file)
+            print(file=file)
 
             if show_dates:
                 print(f"  Days total: {len(dates.keys())}", file=file)
@@ -111,7 +128,32 @@ class Appearances:
                     print(f"  {date.isoformat()}", end='', file=file)
                 print("\n", file=file)
 
-            for shared_records, bystander in sorted([(val.count, key) for key, val in user_encounters.items()], reverse=True):
+            hours: list[int] = [0] * 24
+            weekdays: list[int] = [0] * 7
+            for date, datehours in user_encounters[user].dates.items():
+                weekdays[date.weekday()] += 1
+                for datehour in datehours:
+                    hours[datehour.hour] += 1
+
+            print("  Mon  | Tue  | Wed  | Thu  | Fri  | Sat  | Sun", file=file)
+            values = []
+            dates_total = len(user_encounters[user].dates)
+            for count in weekdays:
+                values.append("{:>4.0%}".format(count / dates_total if dates_total > 0 else 0))
+            print("  " + "   ".join(values), file=file)
+            print(file=file)
+
+            bars = " ▁▂▃▄▅▆▇█"
+            max_hours = max(hours)
+            bars_per_hour = []
+            for count in hours:
+                bar_index = ceil(count / max_hours * 8)
+                bars_per_hour.append(bars[bar_index])
+            print("  1         12          24", file=file)
+            print("  " + "".join(bars_per_hour), file=file)
+            print(file=file)
+
+            for shared_records, bystander in sorted([(appearance.count, bystander) for bystander, appearance in user_encounters.items()], reverse=True):
                 if user == bystander:
                     continue
                 shared_percent = shared_records / records
